@@ -120,6 +120,7 @@ class MainScreen extends StatelessWidget {
             // ),
             onTap: (value){
               print('Tapped index: $value');
+              //AppController().isCategoryPage.value = false;
               controller.currentNavIndex.value=value;
             },
             selectedLabelStyle: const TextStyle(),),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 class AppColors{
   static final Color primaryColor = const Color(0xff9C5DF7);
+  static final Color lightprimaryColor = Color.fromARGB(255, 245, 238, 255);
   static final Color secondaryColor = const Color(0xffCA91FA);
   static final Color tertiaryColor = const Color(0xffC3C2FE);
   static final Color yellowColor = const Color(0xffF0C400);
@@ -57,6 +58,12 @@ class AppColors{
 
   static final Gradient confirmedGradient= LinearGradient(
     colors: [lightGreen, confirmedStatus],
+    //begin: Alignment.left,
+    //end: Alignment.bottomRight,
+  );
+
+  static final Gradient greyGradient= LinearGradient(
+    colors: [lightGreyColor, lightGreyColor],
     //begin: Alignment.left,
     //end: Alignment.bottomRight,
   );

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
+import 'package:kabadiwala/controller/appController.dart';
+import 'package:kabadiwala/controller/leadController.dart';
 import 'package:kabadiwala/screens/aboutus/about.dart';
 import 'package:kabadiwala/screens/home/profile/profile.dart';
 import 'package:kabadiwala/screens/howItworks/howItworks.dart';
 import 'package:kabadiwala/screens/language/selectLanguage.dart';
+import 'package:kabadiwala/screens/location/selectLocation.dart';
 import 'package:kabadiwala/screens/location/setLocation.dart';
+import 'package:kabadiwala/screens/login/address.dart';
 import 'package:kabadiwala/screens/pickupRequest/pickupRequest.dart';
 import 'package:kabadiwala/screens/scrapImpact/scrapImpact.dart';
 import 'package:kabadiwala/screens/shareus/shareus.dart';
@@ -22,6 +28,10 @@ class CommonPageLayout extends StatefulWidget {
 }
 
 class _CommonPageLayoutState extends State<CommonPageLayout> {
+  final AppController controller = (Get.isRegistered<AppController>()) ? Get.find<AppController>() : Get.put(AppController());
+  final LeadController leadController = (Get.isRegistered<LeadController>()) ? Get.find<LeadController>() : Get.put(LeadController());
+
+
   OverlayEntry? _overlayEntry;
 
   void _showDropdownPopup() {
@@ -78,30 +88,98 @@ class _CommonPageLayoutState extends State<CommonPageLayout> {
                         Icon(Icons.arrow_drop_down_circle_outlined, color: AppColors.primaryColor),
                       ],
                     ),
-                    SizedBox(height: 20.h),
-                    Container(
-                      width: double.maxFinite,
-                      decoration: BoxDecoration(
-                        color: AppColors.backgroundColor,
-                       border: Border.all(
-                       color: AppColors.primaryColor, // Border color
-                        width: 2.0, // Border width
-                    ),
-                    borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.all(8.w),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text("Home"),
-                            Text("103, Railway Coloney, Lucknow"),
-                          ],
-                        ),
-                      ),
-                    ),
+                    //SizedBox(height: 20.h),
+               Obx(
+  () {
+    return Container(
+    constraints: BoxConstraints(
+        maxHeight: 300.h, // Set the maximum height for the container
+      ),// Set a fixed height or calculate dynamically
+      child: ListView.builder(
+       // shrinkWrap: true, // Prevent unbounded height
+        //physics: NeverScrollableScrollPhysics(), // Disable internal scrolling
+        itemCount: controller.address.length,
+        itemBuilder: (context, index) {
+          final item = controller.address[index];
+          final isSelected = leadController.selectedAddressId.value == item.id;
 
-                    SizedBox(height: 20.h,),
+          // // Check if no address is selected and set default address to first item in the list
+          // if (leadController.selectedAddressId.value == null && index == 0) {
+          //   leadController.updateSelectedAddress(item); // Set first address as selected
+          // }
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: 8.h),
+            child: InkWell(
+              onTap: () {
+                leadController.updateSelectedAddress(item);
+                _hideDropdownPopup();
+              },
+              child: Container(
+                width: double.maxFinite,
+                //height: 100.h,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.backgroundColor // Background color for selected item
+                      : AppColors.whiteColor,
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.primaryColor // Border color for selected item
+                        : AppColors.greyColor, // Default border color
+                    width: 2.0, // Border width
+                  ),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(8.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.placeType.toString() ?? "",
+                        style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4.h),
+                      Row(
+                        children: [
+                          Text(
+                            item.street.toString() ?? "",
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                          Text(
+                            ",${item.subLocality.toString()} " ?? "",
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                          Text(
+                            ",${item.city.toString()}" ?? "",
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            ",${item.state.toString()}" ?? "",
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                          Text(
+                            "${item.pincode.toString()}" ?? "",
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  },
+),
+   SizedBox(height: 20.h,),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -136,7 +214,7 @@ class _CommonPageLayoutState extends State<CommonPageLayout> {
                          Navigator.push(
                            context,
                   MaterialPageRoute(
-                    builder: (context) => SetLocationScreen(),
+                    builder: (context) => SelectLocationPage(),
                   ),
                 );
                       },
@@ -166,6 +244,11 @@ class _CommonPageLayoutState extends State<CommonPageLayout> {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    controller.readAddress();  // Load address data
+    leadController.loadSelectedAddress();  // Load the selected address
+  });
+
     return Scaffold(
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(60.0), // Set the height of the AppBar
@@ -186,14 +269,22 @@ class _CommonPageLayoutState extends State<CommonPageLayout> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  "Pickup location - Home",
-                  style: TextStyle(fontSize: 18.sp, color: AppColors.whiteColor),
+                Obx(
+                  () {
+                    return Text(
+                      "Pickup location - ${leadController.selectedPlaceType.value ?? ''}",
+                      style: TextStyle(fontSize: 18.sp, color: AppColors.whiteColor),
+                    );
+                  }
                 ),
                 SizedBox(height: 3.h),
-                Text(
-                  "103, Railway Station Coloney Lucknow",
-                  style: TextStyle(fontSize: 16.sp, color: AppColors.whiteColor),
+                Obx(
+                  () {
+                    return Text(
+                      "${leadController.selectedAddress.value}",
+                      style: TextStyle(fontSize: 16.sp, color: AppColors.whiteColor),
+                    );
+                  }
                 ),
               ],
             ),

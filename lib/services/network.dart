@@ -1,15 +1,18 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:io';
+
+import 'package:kabadiwala/controller/appController.dart';
 class NetworkUtil {
    
-  //static String imageUrl = "http://192.168.1.9/creditcode"; 
-  //static String baseUrl = "http://192.168.1.9/creditcode/api/v1";
-   static String baseUrl = "https://earnpie.com/api/v1";
-   static String imageUrl = "https://earnpie.com";
+  static String imageUrl = "http://192.168.1.12/scrapadda"; 
+  static String baseUrl = "http://192.168.1.12/scrapadda/api/v1";
+  // static String baseUrl = "https://earnpie.com/api/v1";
+  // static String imageUrl = "https://earnpie.com";
   static Future<dynamic> networkGet(String url, String? token,
       {Map<String, dynamic>? headers, body, encoding}) {
     var dio = Dio();
@@ -20,7 +23,7 @@ class NetworkUtil {
         // print("Error ${response.statusCode}");
         if (response.statusCode! < 200 || response.statusCode! > 300) {
 
-          // AppController().logout();
+           AppController().logout();
           return false;
         }
         return response;

@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:kabadiwala/screens/home/homeComponents/homeCategoryCard.dart';
-import 'package:kabadiwala/screens/login/basicDetail.dart';
+import 'package:get/get.dart';
+import 'package:kabadiwala/controller/appController.dart';
 import 'package:kabadiwala/screens/mainscreen/commonLayout.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:kabadiwala/screens/rateList/rateListComponent/rateListCard.dart';
 import 'package:kabadiwala/utils/colors.dart';
-import 'package:kabadiwala/widgets/elevatedButtonWidget.dart';
+import 'package:shimmer/shimmer.dart';
 
 class RateListScreen extends StatelessWidget {
+  final AppController controller = (Get.isRegistered<AppController>())
+      ? Get.find<AppController>()
+      : Get.put(AppController());
+  final TextEditingController searchController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
+    controller.readScrapList();
     return CommonPageLayout(
       title: "Kabadiwala",
       body: Padding(
@@ -29,25 +35,31 @@ class RateListScreen extends StatelessWidget {
                   SizedBox(height: 10.h),
                   Text(
                     "Price may fluctuate because of the recycling industry.",
-                    style: TextStyle(fontSize: 15.sp, color: AppColors.greyColor),
+                    style:
+                        TextStyle(fontSize: 15.sp, color: AppColors.greyColor),
                     textScaler: TextScaler.linear(1.0),
                   ),
                   SizedBox(height: 20.h),
-
                   TextField(
+                    controller: searchController,
+                    onChanged: (search) {
+                      controller.readScrapList(searchPhrase: search);
+                    },
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.search, color: AppColors.primaryColor),
+                      prefixIcon:
+                          Icon(Icons.search, color: AppColors.primaryColor),
                       hintText: "Search any scrap items..",
                       hintStyle: TextStyle(
-                        fontSize: 18.sp,
-                        color: AppColors.greyColor,
-                        fontWeight: FontWeight.normal
-                      ),
+                          fontSize: 18.sp,
+                          color: AppColors.greyColor,
+                          fontWeight: FontWeight.normal),
                       border: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor), // Underline color
+                        borderSide: BorderSide(
+                            color: AppColors.greyColor), // Underline color
                       ),
                       focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: AppColors.greyColor), // Color when focused
+                        borderSide: BorderSide(
+                            color: AppColors.greyColor), // Color when focused
                       ),
                     ),
                   ),
@@ -56,149 +68,164 @@ class RateListScreen extends StatelessWidget {
               ),
             ),
 
-            // Paper Category
-            SliverToBoxAdapter(
-              child: Text("Paper",style: TextStyle(fontSize: 18.sp,color: AppColors.greyColor),textScaler: TextScaler.linear(1.0),),
-            ),
+            // Wrap the dynamic category and rate list in Obx
+            Obx(() {
+              if (controller.groupedScrapList.isNotEmpty) {
 
-            SliverToBoxAdapter(
-              child: SizedBox(height: 5.h,),
-            ),
+                
+              return SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    final group = controller.groupedScrapList[index];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Category Name
+                        Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
+                          child: Text(
+                            group.categoryName,
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              color: AppColors.greyColor,
+                            ),
+                            textScaler: TextScaler.linear(1.0),
+                          ),
+                        ),
+                        SizedBox(height: 5.h),
 
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 80.h, // Set height to limit the card height
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5, // Change this to the number of paper rate cards you have
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(right: 10.w),
-                      child: RateListCard(), // Your rate list card widget
+                        // Horizontal Rate List
+                        SizedBox(
+                          height: 80.h,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: group.scrapItems.length,
+                            itemBuilder: (context, scrapIndex) {
+                              final scrapItem = group.scrapItems[scrapIndex];
+                              return Padding(
+                                padding: EdgeInsets.only(right: 10.w),
+                                child: RateListCard(
+                                  scrapName: scrapItem.scrapName ?? "Unknown",
+                                  price: scrapItem.price?.toStringAsFixed(2) ??
+                                      "N/A",
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 25.h),
+                      ],
                     );
                   },
+                  childCount: controller.groupedScrapList.length,
                 ),
-              ),
-            ),
+              );
 
-             SliverToBoxAdapter(
-              child: SizedBox(height: 25.h,),
-            ),
+              
+              }
+              else if(controller.groupedScrapList.isEmpty && AppController.isLoading.value){
+                 return SliverToBoxAdapter(
+  child: Shimmer.fromColors(
+    baseColor: AppColors.greyColor,
+    highlightColor: AppColors.lightGreyColor,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          height: 30.h,
+          width: 90.w,
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
 
-            // Plastic Category
-            SliverToBoxAdapter(
-              child: Text("Plastic",style: TextStyle(fontSize: 18.sp,color: AppColors.greyColor),textScaler: TextScaler.linear(1.0),),
-            ),
+        SizedBox(height: 10.h,),
 
-             SliverToBoxAdapter(
-              child: SizedBox(height: 5.h,),
-            ),
+        Row(
+          children: [
+            Container(
+          height: 80.h,
+          width: 120.w,
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
 
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 80.h, // Set height to limit the card height
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5, // Change this to the number of plastic rate cards you have
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(right: 10.w),
-                      child: RateListCard(), // Your rate list card widget
-                    );
-                  },
-                ),
-              ),
-            ),
+        SizedBox(width: 10.w,),
 
-             SliverToBoxAdapter(
-              child: SizedBox(height: 25.h,),
-            ),
+         Container(
+          height: 80.h,
+          width: 120.w,
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
+          ],
+        ),
 
-            // Metals Category
-            SliverToBoxAdapter(
-              child: Text("Metals",style: TextStyle(fontSize: 18.sp,color: AppColors.greyColor),textScaler: TextScaler.linear(1.0),),
-            ),
+        SizedBox(height: 30.h,),
 
-             SliverToBoxAdapter(
-              child: SizedBox(height: 5.h,),
-            ),
+        Container(
+          height: 30.h,
+          width: 90.w,
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
 
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 80.h, // Set height to limit the card height
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5, // Change this to the number of metal rate cards you have
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(right: 10.w),
-                      child: RateListCard(), // Your rate list card widget
-                    );
-                  },
-                ),
-              ),
-            ),
+        SizedBox(height: 10.h,),
 
+        Row(
+          children: [
+            Container(
+          height: 80.h,
+          width: 120.w,
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
 
-            SliverToBoxAdapter(
-              child: SizedBox(height: 25.h,),
-            ),
+        SizedBox(width: 10.w,),
 
-            // E-waste Category
-            SliverToBoxAdapter(
-              child: Text("E-waste",style: TextStyle(fontSize: 18.sp,color: AppColors.greyColor),textScaler: TextScaler.linear(1.0),),
-            ),
+         Container(
+          height: 80.h,
+          width: 120.w,
+          decoration: BoxDecoration(
+            color: AppColors.lightGreyColor,
+            borderRadius: BorderRadius.circular(4.r),
+          ),
+        ),
+          ],
+        )
+      ],
+    ),
+  ),
+);
 
-             SliverToBoxAdapter(
-              child: SizedBox(height: 5.h,),
-            ),
+               
+              }
 
+              else{
 
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 80.h, // Set height to limit the card height
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5, // Change this to the number of e-waste rate cards you have
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(right: 10.w),
-                      child: RateListCard(), // Your rate list card widget
-                    );
-                  },
-                ),
-              ),
-            ),
+                  return SliverToBoxAdapter(
+                  child: Center(
+                    child: Text(
+                      "No data available",
+                      style:
+                          TextStyle(fontSize: 16.sp, color: AppColors.greyColor),
+                    ),
+                  ),
+                );
+              
+              }
 
-             SliverToBoxAdapter(
-              child: SizedBox(height: 25.h,),
-            ),
-
-            // Other Items Category
-            SliverToBoxAdapter(
-              child: Text("Other items",style: TextStyle(fontSize: 18.sp,color: AppColors.greyColor),textScaler: TextScaler.linear(1.0),),
-            ),
-
-             SliverToBoxAdapter(
-              child: SizedBox(height: 5.h,),
-            ),
-
-
-            SliverToBoxAdapter(
-              child: SizedBox(
-                height: 80.h, // Set height to limit the card height
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: 5, // Change this to the number of other rate cards you have
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: EdgeInsets.only(right: 10.w),
-                      child: RateListCard(), // Your rate list card widget
-                    );
-                  },
-                ),
-              ),
-            ),
+            }),
+          
           ],
         ),
       ),

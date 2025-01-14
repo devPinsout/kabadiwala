@@ -11,8 +11,8 @@ import 'package:kabadiwala/widgets/customTextButton.dart';
 import 'package:kabadiwala/widgets/elevatedButtonWidget.dart';
 import 'package:kabadiwala/widgets/textFormFieldWithBorder.dart';
 
-class BasicDetailScreen extends StatelessWidget {
-  BasicDetailScreen({super.key});
+class UpdateNameScreen extends StatelessWidget {
+  UpdateNameScreen({super.key});
 
   final TextEditingController _firstNameController = TextEditingController();
 final TextEditingController _lastNameController = TextEditingController();
@@ -22,6 +22,9 @@ final TextEditingController _lastNameController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+     _firstNameController.text = AppController.userDetails.value.firstName ?? '';
+     _lastNameController.text = AppController.userDetails.value.lastName ?? '';
+    
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -40,7 +43,7 @@ final TextEditingController _lastNameController = TextEditingController();
                  Image.asset("assets/images/logo-kabad2.png",height: 50.h,width: 100.w,),
                   SizedBox(height: 40.h),
                   Text(
-                    "What's your name?",
+                    "Update your name",
                     style: TextStyle(
                       fontSize: 28.h,
                       fontWeight: FontWeight.bold,
@@ -93,15 +96,15 @@ final TextEditingController _lastNameController = TextEditingController();
             CustomElevatedButton(
               width: double.maxFinite,
               height: 50.h,
-              text: "Continue",
+              text: "Update",
               textSize: 18.sp,
               buttonColor: AppColors.primaryGradient,
               onPressed: () async{
                 controller.updateProfile(
                             firstName: _firstNameController.text,     
-                            lastName: _lastNameController.text, 
-                            email:AppController.userDetails.value.email ??'',     
-                            imageid: AppController.userDetails.value.profileImg ??''                              
+                            lastName: _lastNameController.text,   
+                            email: AppController.userDetails.value.email ?? '',   
+                            imageid: AppController.userDetails.value.profileImg ?? '',                                 
                             );
               },
             ),

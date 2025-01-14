@@ -1,59 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart'; // For date formatting
+import 'package:kabadiwala/controller/appController.dart';
+import 'package:kabadiwala/controller/leadController.dart';
 import 'package:kabadiwala/screens/mainscreen/mainscreen.dart';
 import 'package:kabadiwala/screens/sellScrap/sellScrapConfirmation.dart';
 import 'package:kabadiwala/utils/colors.dart';
 import 'package:kabadiwala/widgets/elevatedButtonWidget.dart';
 
 class SellScrapDateScreen extends StatefulWidget {
-  SellScrapDateScreen({super.key});
+  final bool isUpdate;
+  SellScrapDateScreen({super.key, this.isUpdate = false});
 
   @override
   _SellScrapDateScreenState createState() => _SellScrapDateScreenState();
 }
 
 class _SellScrapDateScreenState extends State<SellScrapDateScreen> {
-  DateTime? selectedDate = DateTime.now(); // Default to today's date
+  final AppController controller = (Get.isRegistered<AppController>()) ? Get.find<AppController>() : Get.put(AppController());
+  final LeadController leadController = (Get.isRegistered<LeadController>()) ? Get.find<LeadController>() : Get.put(LeadController());
 
-  // Function to show the date picker
-  Future<void> _selectDate(BuildContext context) async {
+    Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? DateTime.now(), // Default to current date
+      initialDate: leadController.selectedDate.value, // Use controller's selected date
       firstDate: DateTime.now(), // Set minimum date to today
       lastDate: DateTime(2101), // Set max date
     );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-      });
+    if (picked != null && picked != leadController.selectedDate.value) {
+      leadController.setSelectedDate(picked); // Update the selected date
     }
   }
 
-  // Function to get the day label (Today, Tomorrow, or the weekday name)
-  String getDayLabel() {
-    if (selectedDate == null) return "Select a date";
-
-    DateTime today = DateTime.now();
-    DateTime tomorrow = today.add(Duration(days: 1));
-
-    // Check if selected date is today or tomorrow
-    if (DateFormat('yyyy-MM-dd').format(selectedDate!) == DateFormat('yyyy-MM-dd').format(today)) {
-      return "Today";
-    } else if (DateFormat('yyyy-MM-dd').format(selectedDate!) == DateFormat('yyyy-MM-dd').format(tomorrow)) {
-      return "Tomorrow";
-    } else {
-      // Else, return the weekday name (e.g., Monday, Tuesday)
-      return DateFormat('EEEE').format(selectedDate!);
-    }
-  }
-
-  // Function to get the formatted date
-  String getFormattedDate() {
-    if (selectedDate == null) return "Select a date";
-    return DateFormat('dd-MM-yyyy').format(selectedDate!);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,16 +122,24 @@ class _SellScrapDateScreenState extends State<SellScrapDateScreen> {
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    getDayLabel(),
-                                    style: TextStyle(fontSize: 18.sp,color: AppColors.primaryColor,fontWeight: FontWeight.bold),
+                                  Obx(
+                                    () {
+                                      return Text(
+                                        leadController.getDayLabel(),
+                                        style: TextStyle(fontSize: 18.sp,color: AppColors.primaryColor,fontWeight: FontWeight.bold),
+                                      );
+                                    }
                                   ),
                                   SizedBox(height: 5.h), // Space between day label and date
                               
                                   // Show the selected date
-                                  Text(
-                                    getFormattedDate(),
-                                    style: TextStyle(fontSize: 16.sp, color: AppColors.greyColor),
+                                  Obx(
+                                    () {
+                                      return Text(
+                                        leadController.getFormattedDate(),
+                                        style: TextStyle(fontSize: 16.sp, color: AppColors.greyColor),
+                                      );
+                                    }
                                   ),
                                 ],
                               ),
@@ -190,7 +177,7 @@ class _SellScrapDateScreenState extends State<SellScrapDateScreen> {
               child: CustomElevatedButton(
                 width: double.maxFinite,
                 height: 50.h,
-                text: "Continue",
+                text: widget.isUpdate ? "Update" : "Continue",
                 textSize: 18.sp,
                 buttonColor: AppColors.primaryGradient,
                 onPressed: () async {
